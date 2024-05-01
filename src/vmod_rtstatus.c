@@ -251,7 +251,7 @@ vmod_synthetic_json(VRT_CTX)
 	rtstatus_collect(&rs, vd);
 	VSM_Destroy(&vd);
 	VRT_SetHdr(ctx, &rststatus_content_type,
-	    "application/json; charset=utf-8", &rststatus_content_type_app_strand);
+	    appchar, &rststatus_content_type_app_strand);
 }
 
 VCL_VOID
@@ -270,6 +270,6 @@ vmod_synthetic_html(VRT_CTX)
 
 	AN(ctx->specific);
 	VSB_cat(ctx->specific, html);
-	VRT_SetHdr(ctx, &rststatus_content_type, "text/html; charset=utf-8",
+	VRT_SetHdr(ctx, &rststatus_content_type, textchar,
 	    &rststatus_content_type_text_strand);
 }
