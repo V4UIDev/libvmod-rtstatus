@@ -52,6 +52,7 @@ struct rtstatus_priv {
 static const struct gethdr_s rststatus_content_type =
     { HDR_RESP, "\015Content-Type:"};
 
+static const char *varnish_process_name = "varnishd";
 
 /*--------------------------------------------------------------------*/
 
@@ -220,6 +221,12 @@ rtstatus_collect(struct rtstatus_priv *rs, struct vsm *vd)
 VCL_VOID
 vmod_synthetic_json(VRT_CTX)
 {
+
+	const char *appchar = {"application/json; charset=utf-8"};
+
+	const struct strands rststatus_content_type_app_strand = 
+		{ 1, &appchar };
+
 	struct rtstatus_priv rs;
 	struct vsm *vd;
 
@@ -233,10 +240,10 @@ vmod_synthetic_json(VRT_CTX)
 	AN(vd);
 
 	/* XXX: there is currently no n_arg in heritage */
-	if (VSM_Arg(vd, 'n', heritage.identity) < 0 || VSM_Attach(vd, -1)) {
+	if (VSM_Arg(vd, 'n', varnish_process_name) < 0 || VSM_Attach(vd, -1)) {
 		VSM_Destroy(&vd);
 		VRT_fail(ctx, "rtstatus: can't open VSM for %s",
-		    heritage.identity);
+		    varnish_process_name);
 		return;
 	}
 
@@ -244,12 +251,17 @@ vmod_synthetic_json(VRT_CTX)
 	rtstatus_collect(&rs, vd);
 	VSM_Destroy(&vd);
 	VRT_SetHdr(ctx, &rststatus_content_type,
-	    "application/json; charset=utf-8", vrt_magic_string_end);
+	    "application/json; charset=utf-8", &rststatus_content_type_app_strand);
 }
 
 VCL_VOID
 vmod_synthetic_html(VRT_CTX)
 {
+
+	const char *textchar = {"text/html; charset=utf-8"};
+
+	const struct strands rststatus_content_type_text_strand = 
+		{ 1, &textchar };
 
 	if (ctx->method != VCL_MET_SYNTH) {
 		VRT_fail(ctx, "rtstatus: can only be used in vcl_synth");
@@ -259,5 +271,5 @@ vmod_synthetic_html(VRT_CTX)
 	AN(ctx->specific);
 	VSB_cat(ctx->specific, html);
 	VRT_SetHdr(ctx, &rststatus_content_type, "text/html; charset=utf-8",
-	    vrt_magic_string_end);
+	    &rststatus_content_type_text_strand);
 }
